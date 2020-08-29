@@ -13,4 +13,10 @@ router.post('/testJWT', auth, async (req, res) => {
   res.json(req.user);
 });
 
+//Checks for a valid token and returns a boolean
+router.post('/tokenIsValid', userControllers.tokenIsValid);
+
+//Gets currently logged in user
+router.get('/', auth, userControllers.getLoggedInUser);
+
 module.exports = router;

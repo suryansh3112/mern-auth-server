@@ -2,6 +2,7 @@ const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+//------------------------------------------------------REGISTER------------------------------------------------------
 const register = async (req, res) => {
   try {
     let { username, email, password, passwordCheck } = req.body;
@@ -51,6 +52,7 @@ const register = async (req, res) => {
   }
 };
 
+//----------------------------------------------------------LOGIN-----------------------------------------------------
 const login = async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
@@ -83,7 +85,9 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid Credentials' });
 
     //Assigning Json Web Token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '3h'
+    });
     res.status(200).json({
       token,
       user: {
@@ -97,5 +101,38 @@ const login = async (req, res) => {
   }
 };
 
+//-----------------------------------------------TOKEN-IS-VALID---------------------------------------------------------
+const tokenIsValid = async (req, res) => {
+  try {
+    const token = req.header('x-auth-token');
+    if (!token) return res.json(false);
+
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    if (!verified) {
+      return res.json(false);
+    }
+
+    return res.json(true);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//------------------------------------------------GET-LOGGED-IN-USER------------------------------------------------
+const getLoggedInUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    res.json({
+      id: user._id,
+      username: user.username
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//------------------------------------------------EXPORTS-----------------------------------------------------------
 exports.register = register;
 exports.login = login;
+exports.tokenIsValid = tokenIsValid;
+exports.getLoggedInUser = getLoggedInUser;
